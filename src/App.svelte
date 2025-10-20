@@ -1,27 +1,10 @@
 <script lang="ts">
+  // External library imports
   import cytoscape from "cytoscape";
   import elk from "cytoscape-elk";
   import { onMount } from "svelte";
 
-  cytoscape.use(elk);
-
-  let cyContainer: HTMLElement = document.getElementById("cy-canvas")!;
-  let cy: cytoscape.Core;
-
-  function generateRandomString(length: number) {
-    const characters =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    const charactersLength = characters.length;
-    for (let i = 0; i < length; i++) {
-      // Use Math.random() for short, non-cryptographic strings
-      result += characters.charAt(Math.random() * charactersLength);
-    }
-    return result;
-  }
-
-  // Execution:
-  // const S = generateRandomString(L);
+  // Type definitions
   type SDFNode = {
     id: string;
     label: string;
@@ -30,14 +13,120 @@
     outputCount: number;
   };
 
-  function addNode() {
+  // Configure Cytoscape with ELK layout
+  cytoscape.use(elk);
+
+  // Component state
+  let cyContainer: HTMLElement = document.getElementById("cy-canvas")!;
+  let cy: cytoscape.Core;
+
+  // Style configuration for graph nodes and edges
+  const graphStyles: cytoscape.Stylesheet[] = [
+    {
+      selector: "node[type='actor']",
+      style: {
+        "background-color": "#f3f4f6",
+        label: "data(label)",
+        "text-valign": "center",
+        "text-halign": "center",
+        "font-size": 12,
+        "border-width": "1",
+      },
+    },
+    {
+      selector: "node[type='delay']",
+      style: {
+        "background-color": "#000",
+        "text-valign": "center",
+        "text-halign": "center",
+        "font-size": 12,
+        width: 8,
+        height: 8,
+      },
+    },
+    {
+      selector: "node[type='input']",
+      style: {
+        "background-color": "#f3f4f6",
+        "text-valign": "center",
+        "text-halign": "center",
+        label: "data(label)",
+        "font-size": 12,
+        width: 8,
+        height: 8,
+        "border-width": 0,
+      },
+    },
+    {
+      selector: "node[type='output']",
+      style: {
+        "background-color": "#f3f4f6",
+        "text-valign": "center",
+        "text-halign": "center",
+        label: "data(label)",
+        "font-size": 12,
+        width: 8,
+        height: 8,
+        "border-width": 0,
+      },
+    },
+    {
+      selector: "edge",
+      style: {
+        width: 2,
+        "line-color": "#ccc",
+        "target-arrow-color": "#ccc",
+        "target-arrow-shape": "triangle",
+        "curve-style": "bezier",
+      },
+    },
+  ];
+
+  // Initial graph elements
+  const initialElements: cytoscape.ElementDefinition[] = [
+    // Nodes
+    { data: { id: "a", type: "actor", label: "a" } },
+    { data: { id: "b", type: "actor", label: "b" } },
+    { data: { id: "x", type: "delay" } },
+    { data: { id: "d", type: "actor", label: "d" } },
+
+    // Edges
+    { data: { id: "c", source: "a", target: "b" } },
+    { data: { source: "a", target: "b" } },
+    { data: { source: "d", target: "x" } },
+    { data: { source: "d", target: "a" } },
+    { data: { source: "x", target: "d" } },
+
+    // Input node and edge
+    { data: { id: "in1", type: "input", label: "in1" } },
+    { data: { source: "in1", target: "a" } },
+
+    // Output node and edge
+    { data: { id: "out1", type: "output", label: "out1" } },
+    { data: { source: "b", target: "out1" } },
+  ];
+
+  // Utility functions
+  function generateRandomString(length: number): string {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.random() * charactersLength);
+    }
+    return result;
+  }
+
+  // Graph manipulation functions
+  function addNode(): void {
     cy.add({
       group: "nodes",
       data: { id: generateRandomString(3) },
     });
   }
 
-  function relayout() {
+  function relayout(): void {
     cy.layout({
       name: "elk",
       animate: true,
@@ -46,94 +135,17 @@
     }).run();
   }
 
+  // Component lifecycle
   onMount(() => {
     cy = cytoscape({
       container: cyContainer,
-      elements: [
-        // list of graph elements to start with
-        { data: { id: "a", type: "actor", label: "a" } },
-        { data: { id: "b", type: "actor", label: "b" } },
-        { data: { id: "x", type: "delay" } },
-        { data: { id: "d", type: "actor", label: "d" } },
-        { data: { id: "c", source: "a", target: "b" } },
-        { data: { source: "a", target: "b" } },
-        { data: { source: "d", target: "x" } },
-        { data: { source: "d", target: "a" } },
-        { data: { source: "x", target: "d" } },
-
-        { data: { id: "in1", type: "input", label: "in1" } },
-        { data: { source: "in1", target: "a" } },
-
-        { data: { id: "out1", type: "output", label: "out1" } },
-        { data: { source: "b", target: "out1" } },
-      ],
-      style: [
-        {
-          selector: "node[type='actor']",
-          style: {
-            "background-color": "#f3f4f6",
-            label: "data(label)",
-            "text-valign": "center",
-            "text-halign": "center",
-            "font-size": 12,
-            "border-width": "1",
-          },
-        },
-        {
-          selector: "node[type='delay']",
-          style: {
-            "background-color": "#000",
-            "text-valign": "center",
-            "text-halign": "center",
-            "font-size": 12,
-            width: 8,
-            height: 8,
-          },
-        },
-        {
-          selector: "node[type='input']",
-          style: {
-            "background-color": "#f3f4f6",
-            "text-valign": "center",
-            "text-halign": "center",
-            label: "data(label)",
-            "font-size": 12,
-            width: 8,
-            height: 8,
-            "border-width": 0,
-          },
-        },
-        {
-          selector: "node[type='output']",
-          style: {
-            "background-color": "#f3f4f6",
-            "text-valign": "center",
-            "text-halign": "center",
-            label: "data(label)",
-            "font-size": 12,
-            width: 8,
-            height: 8,
-            "border-width": 0,
-          },
-        },
-        {
-          selector: "edge",
-          style: {
-            width: 2,
-            "line-color": "#ccc",
-            "target-arrow-color": "#ccc",
-            "target-arrow-shape": "triangle",
-            "curve-style": "bezier",
-          },
-        },
-      ],
+      elements: initialElements,
+      style: graphStyles,
       layout: {
         name: "elk",
       },
     });
   });
-
-  // diagram.create()
 </script>
 
 <main
