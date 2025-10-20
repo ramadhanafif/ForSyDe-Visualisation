@@ -1,32 +1,125 @@
 <script lang="ts">
   import cytoscape from "cytoscape";
+  import elk from "cytoscape-elk";
   import { onMount } from "svelte";
 
+  cytoscape.use(elk);
+
   let cyContainer: HTMLElement = document.getElementById("cy-canvas")!;
+  let cy: cytoscape.Core;
+
+  function generateRandomString(length: number) {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+      // Use Math.random() for short, non-cryptographic strings
+      result += characters.charAt(Math.random() * charactersLength);
+    }
+    return result;
+  }
+
+  // Execution:
+  // const S = generateRandomString(L);
+  type SDFNode = {
+    id: string;
+    label: string;
+    type: "actor" | "delay" | "input" | "output";
+    inputCount: number;
+    outputCount: number;
+  };
+
+  function addNode() {
+    cy.add({
+      group: "nodes",
+      data: { id: generateRandomString(3) },
+    });
+  }
+
+  function relayout() {
+    cy.layout({
+      name: "elk",
+      animate: true,
+      animationDuration: 100,
+      fit: true,
+    }).run();
+  }
 
   onMount(() => {
-    cytoscape({
+    cy = cytoscape({
       container: cyContainer,
       elements: [
         // list of graph elements to start with
-        { data: { id: "a" } },
-        { data: { id: "b" } },
+        { data: { id: "a", type: "actor", label: "a" } },
+        { data: { id: "b", type: "actor", label: "b" } },
+        { data: { id: "x", type: "delay" } },
+        { data: { id: "d", type: "actor", label: "d" } },
         { data: { id: "c", source: "a", target: "b" } },
         { data: { source: "a", target: "b" } },
+        { data: { source: "d", target: "x" } },
+        { data: { source: "d", target: "a" } },
+        { data: { source: "x", target: "d" } },
+
+        { data: { id: "in1", type: "input", label: "in1" } },
+        { data: { source: "in1", target: "a" } },
+
+        { data: { id: "out1", type: "output", label: "out1" } },
+        { data: { source: "b", target: "out1" } },
       ],
       style: [
-        // basic stylesheet for the nodes and edges
         {
-          selector: "node",
+          selector: "node[type='actor']",
           style: {
-            "background-color": "#666",
-            label: "data(id)",
+            "background-color": "#f3f4f6",
+            label: "data(label)",
+            "text-valign": "center",
+            "text-halign": "center",
+            "font-size": 12,
+            "border-width": "1",
+          },
+        },
+        {
+          selector: "node[type='delay']",
+          style: {
+            "background-color": "#000",
+            "text-valign": "center",
+            "text-halign": "center",
+            "font-size": 12,
+            width: 8,
+            height: 8,
+          },
+        },
+        {
+          selector: "node[type='input']",
+          style: {
+            "background-color": "#f3f4f6",
+            "text-valign": "center",
+            "text-halign": "center",
+            label: "data(label)",
+            "font-size": 12,
+            width: 8,
+            height: 8,
+            "border-width": 0,
+          },
+        },
+        {
+          selector: "node[type='output']",
+          style: {
+            "background-color": "#f3f4f6",
+            "text-valign": "center",
+            "text-halign": "center",
+            label: "data(label)",
+            "font-size": 12,
+            width: 8,
+            height: 8,
+            "border-width": 0,
           },
         },
         {
           selector: "edge",
           style: {
-            width: 3,
+            width: 2,
             "line-color": "#ccc",
             "target-arrow-color": "#ccc",
             "target-arrow-shape": "triangle",
@@ -35,8 +128,7 @@
         },
       ],
       layout: {
-        name: "grid",
-        rows: 1,
+        name: "elk",
       },
     });
   });
@@ -83,7 +175,15 @@
   <div class="w-full px-8 my-4 flex gap-4">
     <button
       class="rounded-lg bg-blue-700 text-white px-4 py-2 hover:scale-105 hover:bg-blue-600 transition-all"
-      >Add Node</button
+      onclick={addNode}>Add Node</button
+    >
+    <button
+      class="rounded-lg bg-blue-700 text-white px-4 py-2 hover:scale-105 hover:bg-blue-600 transition-all"
+      onclick={relayout}>Layout</button
+    >
+    <button
+      class="rounded-lg bg-red-700 text-white px-4 py-2 hover:scale-105 hover:bg-red-600 transition-all"
+      onclick={() => window.location.reload()}>Restart</button
     >
   </div>
 
