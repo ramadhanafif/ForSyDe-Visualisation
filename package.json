@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
+    "cytoscape": "^3.33.1",
+    "cytoscape-elk": "^2.3.0",
     "tailwindcss": "^4.1.14"
   }
 }
