@@ -26,3 +26,17 @@ npm run build
 ```
 
 the resulting build should exist in `./dist` directory.
+
+## Testing
+
+This project uses [Vitest](https://vitest.dev/) for testing.
+
+To run tests:
+
+```bash
+npm run test        # Run tests in watch mode
+npm run test:run    # Run tests once
+npm run test:ui     # Run tests with UI
+```
+
+Test files are located alongside source files with the `.test.ts` or `.spec.ts` extension.
